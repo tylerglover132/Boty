@@ -30,7 +30,7 @@ class PointsCog(commands.Cog):
     async def points(self, ctx: discord.ext.commands.Context) -> None:
         points_list = json.loads(Path("data/points.json").read_text())
         if str(ctx.author.id) in points_list:
-            await ctx.reply(f"You have {points_list[ctx.author.id]}!")
+            await ctx.reply(f"You have {points_list[str(ctx.author.id)]}!")
         else:
             await ctx.reply("You are currently not tracking points. Use command !trackpoints to begin tracking")
 
