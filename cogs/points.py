@@ -15,13 +15,13 @@ class PointsCog(commands.Cog):
     async def trackpoints(self, ctx) -> None:
         points_list = json.loads(Path("data/points.json").read_text())
         if str(ctx.author.id) in points_list:
-            ctx.reply("You're already signed up to track points")
+            await ctx.reply("You're already signed up to track points")
         else:
             points_list[ctx.author.id] = 0
             try:
                 with open("data/points.json", "w", encoding="utf-8") as f:
                     json.dump(points_list, f, ensure_ascii=True, indent=4)
-                ctx.reply("You points are now being tracked.")
+                await ctx.reply("You points are now being tracked.")
             except Exception as e:
                 await ctx.reply("Sorry, there was an error. Please try to sign up for points tracking later.")
                 self.bot.logger.error(f"Error occurred while adding point tracking: {e}")
