@@ -21,6 +21,7 @@ class PointsCog(commands.Cog):
             try:
                 with open("data/points.json", "w", encoding="utf-8") as f:
                     json.dump(points_list, f, ensure_ascii=True, indent=4)
+                ctx.reply("You points are now being tracked.")
             except Exception as e:
                 await ctx.reply("Sorry, there was an error. Please try to sign up for points tracking later.")
                 self.bot.logger.error(f"Error occurred while adding point tracking: {e}")
