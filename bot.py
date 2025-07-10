@@ -152,17 +152,6 @@ class DiscordBot(commands.Bot):
                         f"Failed to load extension {extension}\n{exception}"
                     )
 
-    @tasks.loop(minutes=1.0)
-    async def log_check(self) -> None:
-        self.logger.info("Logger check loop performed")
-
-    @log_check.before_loop
-    async def before_log_check(self) -> None:
-        """
-        Before starting the status changing task, we make sure the bot is ready
-        """
-        await self.wait_until_ready()
-
     async def setup_hook(self) -> None:
         """
         This will just be executed when the bot starts the first time.
@@ -176,7 +165,6 @@ class DiscordBot(commands.Bot):
         self.logger.info("-------------------")
         # await self.init_db()
         await self.load_cogs()
-        self.log_check.start()
         """
         self.database = DatabaseManager(
             connection=await aiosqlite.connect(

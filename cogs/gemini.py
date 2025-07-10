@@ -1,4 +1,6 @@
 import os
+
+import discord
 from discord.ext import commands
 from google import genai
 from dotenv import load_dotenv
@@ -37,13 +39,13 @@ PERSONALITIES = [SLAP_SHOT, BONGO, PERCY]
 class GeminiCog(commands.Cog):
     """Cog that forwards messages to Gemini and replies."""
 
-    def __init__(self, bot):
+    def __init__(self, bot: discord.ext.commands.Bot):
         self.bot = bot
         self.client = genai.Client()
         self.model_name = "gemini-2.5-flash"
 
     @commands.Cog.listener()
-    async def on_message(self, message):
+    async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
         if message.content.startswith(self.bot.command_prefix):
@@ -72,5 +74,5 @@ class GeminiCog(commands.Cog):
         else:
             self.bot.logger.info(f"will_speak: {will_speak}. Choosing not to respond")
 
-async def setup(bot):
+async def setup(bot: discord.ext.commands.Bot):
     await bot.add_cog(GeminiCog(bot))

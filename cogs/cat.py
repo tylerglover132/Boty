@@ -1,6 +1,6 @@
 import os
 
-import discord
+import discord.ext.commands
 from discord.ext import commands
 import aiohttp
 from dotenv import load_dotenv
@@ -11,12 +11,12 @@ os.environ["CAT_API_KEY"] = os.getenv("CAT_API_KEY")
 class CatCog(commands.Cog):
     """Cag that allows accessing random cat images"""
 
-    def __init__(self, bot):
+    def __init__(self, bot: discord.ext.commands.Bot) -> None:
         self.bot = bot
         self.session = aiohttp.ClientSession()
 
     @commands.command(name="cat")
-    async def cat(self, ctx):
+    async def cat(self, ctx: discord.ext.commands.Context) -> None:
         headers = {"x-api-key": os.environ["CAT_API_KEY"]}
         params = {"limit":1, "size": "small", "mime_types": "jpg"}
         async with self.session.get(
@@ -31,8 +31,8 @@ class CatCog(commands.Cog):
                 await ctx.send("Error: Could not get cat")
                 self.bot.logger.info(f"Error {response.status}")
 
-    def cog_unload(self):
+    def cog_unload(self) -> None:
         self.bot.loop.create_task(self.session.close())
 
-async def setup(bot):
+async def setup(bot: discord.ext.commands.Bot) -> None:
     await bot.add_cog(CatCog(bot))
