@@ -1,12 +1,8 @@
-[2025-07-09 21:21:02] [INFO    ] discord_bot: Logged in as Botly
-[2025-07-09 21:21:02] [INFO    ] discord_bot: discord.py API version: 2.5.2
-[2025-07-09 21:21:02] [INFO    ] discord_bot: Python version: 3.12.3
-[2025-07-09 21:21:02] [INFO    ] discord_bot: Running on: Linux 6.11.0-29-generic (posix)
-[2025-07-09 21:21:02] [INFO    ] discord_bot: -------------------
-[2025-07-09 21:21:02] [INFO    ] discord_bot: Loaded extension 'cat'
-[2025-07-09 21:21:02] [INFO    ] discord_bot: Loaded extension 'gemini'
-[2025-07-09 21:21:05] [INFO    ] discord_bot: Logger check loop performed
-[2025-07-09 21:22:05] [INFO    ] discord_bot: Logger check loop performed
-[2025-07-09 21:23:05] [INFO    ] discord_bot: Logger check loop performed
-[2025-07-09 21:24:05] [INFO    ] discord_bot: Logger check loop performed
-[2025-07-09 21:25:05] [INFO    ] discord_bot: Logger check loop performed
+[2025-07-09 21:33:04] [INFO    ] discord_bot: Logged in as Botly
+[2025-07-09 21:33:04] [INFO    ] discord_bot: discord.py API version: 2.5.2
+[2025-07-09 21:33:04] [INFO    ] discord_bot: Python version: 3.12.3
+[2025-07-09 21:33:04] [INFO    ] discord_bot: Running on: Linux 6.11.0-29-generic (posix)
+[2025-07-09 21:33:04] [INFO    ] discord_bot: -------------------
+[2025-07-09 21:33:04] [INFO    ] discord_bot: Loaded extension 'cat'
+[2025-07-09 21:33:04] [INFO    ] discord_bot: Loaded extension 'gemini'
+[2025-07-09 21:33:07] [INFO    ] discord_bot: Logger check loop performed

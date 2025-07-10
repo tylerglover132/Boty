@@ -46,7 +46,7 @@ class GeminiCog(commands.Cog):
     async def on_message(self, message):
         if message.author.bot:
             return
-        if message.conent.startswith(self.bot.command_prefix):
+        if message.content.startswith(self.bot.command_prefix):
             return
 
         will_speak = r.randint(1,100) <= RESPONSE_RATE
