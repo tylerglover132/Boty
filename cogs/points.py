@@ -12,7 +12,7 @@ class PointsCog(commands.Cog):
         self.add_points_for_all.start()
 
     @commands.command(name="trackpoints")
-    async def trackpoints(self, ctx) -> None:
+    async def trackpoints(self, ctx: discord.ext.commands.Context) -> None:
         points_list = json.loads(Path("data/points.json").read_text())
         if str(ctx.author.id) in points_list:
             await ctx.reply("You're already signed up to track points")
@@ -25,6 +25,14 @@ class PointsCog(commands.Cog):
             except Exception as e:
                 await ctx.reply("Sorry, there was an error. Please try to sign up for points tracking later.")
                 self.bot.logger.error(f"Error occurred while adding point tracking: {e}")
+
+    @commands.command(name="points")
+    async def points(self, ctx: discord.ext.commands.Context) -> None:
+        points_list = json.loads(Path("data/points.json").read_text())
+        if str(ctx.author.id) in points_list:
+            await ctx.reply(f"You have {points_list[ctx.author.id]}!")
+        else:
+            await ctx.reply("You are currently not tracking points. Use command !trackpoints to begin tracking")
 
     @tasks.loop(minutes=120.0)
     async def add_points_for_all(self) -> None:
