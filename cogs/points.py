@@ -3,6 +3,10 @@ import json
 import discord
 from discord.ext import commands, tasks
 from pathlib import Path
+import random as r
+
+from pydantic_core.core_schema import plain_serializer_function_ser_schema
+
 
 class PointsCog(commands.Cog):
     """Cog that manages user points"""
@@ -25,6 +29,27 @@ class PointsCog(commands.Cog):
             except Exception as e:
                 await ctx.reply("Sorry, there was an error. Please try to sign up for points tracking later.")
                 self.bot.logger.error(f"Error occurred while adding point tracking: {e}")
+
+    @commands.command(name="gamble")
+    async def gamble(self, ctx: discord.ext.commands.Context) -> None:
+        points_list = json.loads(Path("data/points.json").read_text())
+        if str(ctx.author.id) in points_list:
+            double = r.choice([True, False])
+            if(double):
+                points_list[str(ctx.author.id)] = int(points_list[str(ctx.author.id)] * 2)
+                response = "Congrats! Your points have been doubled! New points value: "
+            else:
+                points_list[str(ctx.author.id)] = int(points_list[str(ctx.author.id)] / 2)
+                response = "Better luck next time. You lost half your points :( New points value: "
+            try:
+                with open("data/points.json", "w", encoding="utf-8") as f:
+                    json.dump(points_list, f, ensure_ascii=True, indent=4)
+                await ctx.reply(response + str(points_list[str(ctx.author.id)]))
+            except Exception as e:
+                await ctx.reply("Sorry, there was an error. No points changed")
+                self.bot.logger.error(f"Error occurred while gambling: {e}")
+        else:
+            await ctx.reply("You are currently not tracking points. Use command !trackpoints to begin tracking")
 
     @commands.command(name="points")
     async def points(self, ctx: discord.ext.commands.Context) -> None:
