@@ -55,6 +55,19 @@ class PointsCog(commands.Cog):
         else:
             await ctx.reply("You are currently not tracking points. Use command !trackpoints to begin tracking")
 
+    @commands.command(name="leaderboard")
+    async def leaderboard(self, ctx):
+        points_list = json.loads(Path("data/points.json").read_text())
+        points_list_sorted_keys = dict(sorted(points_list.items(), key=lambda item: item[1])).keys()
+        listing = ''
+        for key in points_list_sorted_keys:
+            points = points_list[key]
+            user = await self.bot.fetch_user(int(key))
+            username = user.display_name
+            listing += username + ":  " + str(points)
+        embed = discord.Embed(title="Leaderboard", description = listing, color=0x00ff00)
+        await ctx.send(embed=embed)
+
     @tasks.loop(minutes=120.0)
     async def add_points_for_all(self) -> None:
         points_list = json.loads(Path("data/points.json").read_text())
