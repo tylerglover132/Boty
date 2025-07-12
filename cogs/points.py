@@ -58,13 +58,13 @@ class PointsCog(commands.Cog):
     @commands.command(name="leaderboard")
     async def leaderboard(self, ctx):
         points_list = json.loads(Path("data/points.json").read_text())
-        points_list_sorted_keys = dict(sorted(points_list.items(), key=lambda item: item[1])).keys()
+        points_list_sorted_keys = dict(sorted(points_list.items(), key=lambda item: item[1], reverse=True)).keys()
         listing = ''
         for key in points_list_sorted_keys:
             points = points_list[key]
             user = await self.bot.fetch_user(int(key))
             username = user.display_name
-            listing += username + ":  " + str(points)
+            listing += username + ":  " + str(points) + '\n'
         embed = discord.Embed(title="Leaderboard", description = listing, color=0x00ff00)
         await ctx.send(embed=embed)
 
