@@ -1,12 +1,8 @@
 import json
-
 import discord
 from discord.ext import commands, tasks
 from pathlib import Path
 import random as r
-
-from pydantic_core.core_schema import plain_serializer_function_ser_schema
-
 
 class PointsCog(commands.Cog):
     """Cog that manages user points"""
@@ -35,7 +31,7 @@ class PointsCog(commands.Cog):
         points_list = json.loads(Path("data/points.json").read_text())
         if str(ctx.author.id) in points_list:
             double = r.choice([True, False])
-            if(double):
+            if double:
                 points_list[str(ctx.author.id)] = int(points_list[str(ctx.author.id)] * 2)
                 response = "Congrats! Your points have been doubled! New points value: "
             else:

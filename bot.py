@@ -255,5 +255,12 @@ class DiscordBot(commands.Bot):
         else:
             raise error
 
+    async def close(self):
+        for cog in self.cogs.values():
+            if hasattr(cog, "async_cleanup"):
+                await cog.async_cleanup()
+
+        await super().close()
+
 bot = DiscordBot()
 bot.run(os.getenv("TOKEN"))
