@@ -36,6 +36,7 @@ class TriviaGame:
         options = [self.question['correct_answer']]
         for option in self.question['incorrect_answers']:
             options.append(option)
+        r.shuffle(options)
         return options
 
     def get_correct(self) -> str:
