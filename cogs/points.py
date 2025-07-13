@@ -154,27 +154,28 @@ class PointsCog(commands.Cog):
             return
 
         if self.trivia_game:
-            user_id = message.author.id
-            if user_id in self.trivia_game.already_answered:
-                await message.reply("You already answered! Don't be greedy!")
-                return
+            if message.channel.id in config['trivia_channel_id']:
+                user_id = message.author.id
+                if user_id in self.trivia_game.already_answered:
+                    await message.reply("You already answered! Don't be greedy!")
+                    return
 
-            if message.content == self.trivia_game.get_correct():
-                points_list = json.loads(Path("data/points.json").read_text())
-                points_list[str(user_id)] += 100
-                try:
-                    with open("data/points.json", "w", encoding="utf-8") as f:
-                        json.dump(points_list, f, ensure_ascii=True, indent=4)
-                    await message.reply("Correct! 100 points added!")
-                    self.trivia_game = None
-                except Exception as e:
-                    await message.reply('Oh no! There was an issue! Trivia time over :(')
-                    self.bot.logger.error('Trivia error occurred. Ending trivia')
-                    self.trivia_game = None
+                if message.content == self.trivia_game.get_correct():
+                    points_list = json.loads(Path("data/points.json").read_text())
+                    points_list[str(user_id)] += 100
+                    try:
+                        with open("data/points.json", "w", encoding="utf-8") as f:
+                            json.dump(points_list, f, ensure_ascii=True, indent=4)
+                        await message.reply("Correct! 100 points added!")
+                        self.trivia_game = None
+                    except Exception as e:
+                        await message.reply('Oh no! There was an issue! Trivia time over :(')
+                        self.bot.logger.error('Trivia error occurred. Ending trivia')
+                        self.trivia_game = None
 
-            else:
-                self.trivia_game.already_answered.append(user_id)
-                await message.reply('Nope! Better luck next time!')
+                else:
+                    self.trivia_game.already_answered.append(user_id)
+                    await message.reply('Nope! Better luck next time!')
 
     @add_points_for_all.before_loop
     async def before_add_points_for_all(self) -> None:
