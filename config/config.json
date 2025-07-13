@@ -1,4 +1,5 @@
 {
-  "response_rate": "20",
-  "command_prefix": "!"
+  "response_rate": "0",
+  "command_prefix": "!",
+  "trivia_channel_id": [1393806587025690644]
 }
