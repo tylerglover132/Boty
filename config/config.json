@@ -2,5 +2,6 @@
   "response_rate": "0",
   "command_prefix": "!",
   "trivia_channel_id": [1393806587025690644],
-  "bot_name": "Botly"
+  "bot_name": "Botly",
+  "trivia_chance": 80
 }

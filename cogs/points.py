@@ -6,10 +6,26 @@ from pathlib import Path
 import random as r
 import aiohttp
 import html
+from discord.ui import View, Button
 
 TRIVIA_URL = "https://opentdb.com/api.php?amount=1&difficulty=hard&type=multiple"
 
 config = json.loads(Path('config/config.json').read_text())
+
+
+def add_points(user_id: int, points: int) -> int:
+    print(f'Adding points for {user_id}')
+    points_list = json.loads(Path('data/points.json').read_text())
+    if str(user_id) in points_list.keys():
+        points_list[str(user_id)] += points
+        try:
+            with open("data/points.json", "w", encoding="utf-8") as f:
+                json.dump(points_list, f, ensure_ascii=True, indent=4)
+            return points_list[str(user_id)]
+        except Exception as e:
+            return -1
+    else:
+        return -2
 
 class TriviaGame:
 
@@ -123,20 +139,25 @@ class PointsCog(commands.Cog):
 
     @tasks.loop(minutes=60.0)
     async def trivia(self) -> None:
-        if r.randint(1, 100) < 20:
+        if r.randint(1, 100) < config['trivia_chance']:
             self.bot.logger.info("Starting trivia")
             self.trivia_game = TriviaGame()
             await self.trivia_game.retrieve_question()
-            message = "🎉 **Trivia Round Started!** 🎉\n\n"
-            message += "💡 The first person to respond with the right answer will win points!\n\n"
-            message += f"❓ *{self.trivia_game.get_question()}*\n\n"
+            options_text = ''
             for option in self.trivia_game.return_options():
-                message += (option + '\n')
+                options_text += (option + '\n')
+            embed = discord.Embed(
+                title="🎉 Trivia Time!",
+                description=f"💡 The first person to respond with the right answer will win points!\n\n"
+                            f"❓ *{self.trivia_game.get_question()}*\n\n"
+                            f"{options_text}"
+            )
+            embed.set_footer(text="Reply with the correct answer exactly as shown. You have 30 minutes!")
 
             trivia_channels = config['trivia_channel_id']
             for channel_id in trivia_channels:
                 channel = self.bot.get_channel(channel_id)
-                await channel.send(message)
+                await channel.send(embed=embed)
 
             await asyncio.sleep(30 * 60)
 
@@ -162,17 +183,16 @@ class PointsCog(commands.Cog):
                     return
 
                 if message.content == self.trivia_game.get_correct():
-                    points_list = json.loads(Path("data/points.json").read_text())
-                    points_list[str(user_id)] += 100
-                    try:
-                        with open("data/points.json", "w", encoding="utf-8") as f:
-                            json.dump(points_list, f, ensure_ascii=True, indent=4)
-                        await message.reply("Correct! 100 points added!")
-                        self.trivia_game = None
-                    except Exception as e:
+                    result = add_points(user_id, 100)
+                    self.trivia_game = None
+                    if result == -2:
+                        await message.reply("You're right but we can't add your points! Looks like you're not tracking your points. !trackpoints to start stracking.")
+                        return
+                    if result == -1:
                         await message.reply('Oh no! There was an issue! Trivia time over :(')
                         self.bot.logger.error('Trivia error occurred. Ending trivia')
-                        self.trivia_game = None
+                        return
+                    await message.reply('Correct! 100 points added!')
 
                 else:
                     self.trivia_game.already_answered.append(user_id)
@@ -188,6 +208,7 @@ class PointsCog(commands.Cog):
     @trivia.before_loop
     async def before_trivia(self) -> None:
         await self.bot.wait_until_ready()
+
 
 
 async def setup(bot: discord.ext.commands.Bot) -> None:
