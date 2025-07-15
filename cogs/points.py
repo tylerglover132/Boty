@@ -64,8 +64,12 @@ class PointsCog(commands.Cog):
     def __init__(self, bot: discord.ext.commands.Bot)-> None:
         self.bot = bot
         self.trivia_game = None
+        self.gamble_cooldown = False
+
+        # Start loops
         self.add_points_for_all.start()
         self.trivia.start()
+        self.refresh_gamble_cooldown.start()
 
 
     @commands.command(name="trackpoints")
@@ -85,24 +89,30 @@ class PointsCog(commands.Cog):
 
     @commands.command(name="gamble")
     async def gamble(self, ctx: discord.ext.commands.Context) -> None:
-        points_list = json.loads(Path("data/points.json").read_text())
-        if str(ctx.author.id) in points_list:
-            double = r.choice([True, False])
-            if double:
-                points_list[str(ctx.author.id)] = int(points_list[str(ctx.author.id)] * 2)
-                response = "Congrats! Your points have been doubled! New points value: "
+        if not self.gamble_cooldown:
+            points_list = json.loads(Path("data/points.json").read_text())
+            if str(ctx.author.id) in points_list:
+                double = r.choice([True, False])
+                if double:
+                    points_list[str(ctx.author.id)] = int(points_list[str(ctx.author.id)] * 2)
+                    response = "Congrats! Your points have been doubled! New points value: "
+                else:
+                    points_list[str(ctx.author.id)] = int(points_list[str(ctx.author.id)] / 2)
+                    response = "Better luck next time. You lost half your points :( New points value: "
+                try:
+                    with open("data/points.json", "w", encoding="utf-8") as f:
+                        json.dump(points_list, f, ensure_ascii=True, indent=4)
+                    await ctx.reply(response + str(points_list[str(ctx.author.id)]))
+                except Exception as e:
+                    await ctx.reply("Sorry, there was an error. No points changed")
+                    self.bot.logger.error(f"Error occurred while gambling: {e}")
             else:
-                points_list[str(ctx.author.id)] = int(points_list[str(ctx.author.id)] / 2)
-                response = "Better luck next time. You lost half your points :( New points value: "
-            try:
-                with open("data/points.json", "w", encoding="utf-8") as f:
-                    json.dump(points_list, f, ensure_ascii=True, indent=4)
-                await ctx.reply(response + str(points_list[str(ctx.author.id)]))
-            except Exception as e:
-                await ctx.reply("Sorry, there was an error. No points changed")
-                self.bot.logger.error(f"Error occurred while gambling: {e}")
+                await ctx.reply("You are currently not tracking points. Use command !trackpoints to begin tracking")
+            self.gamble_cooldown = True
+
         else:
-            await ctx.reply("You are currently not tracking points. Use command !trackpoints to begin tracking")
+            await ctx.reply("!gamble is on cooldown. Please, play responsibly.")
+            self.bot.logger.info("!gamble not completed, on cooldown")
 
     @commands.command(name="points")
     async def points(self, ctx: discord.ext.commands.Context) -> None:
@@ -170,6 +180,11 @@ class PointsCog(commands.Cog):
         else:
             self.bot.logger.info('Trivia loop. No trivia this time.')
 
+    @tasks.loop(minutes=30.0)
+    async def refresh_gamble_cooldown(self) -> None:
+        self.gamble_cooldown = False
+        self.bot.logger.info("!gamble off of cooldown")
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         if message.author.bot:
@@ -207,6 +222,10 @@ class PointsCog(commands.Cog):
 
     @trivia.before_loop
     async def before_trivia(self) -> None:
+        await self.bot.wait_until_ready()
+
+    @refresh_gamble_cooldown.before_loop
+    async def before_refresh_gamble_cooldown(self) -> None:
         await self.bot.wait_until_ready()
 
 
