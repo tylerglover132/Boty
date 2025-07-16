@@ -183,12 +183,18 @@ class DiscordBot(commands.Bot):
         await self.process_commands(message)
 
         match message.author.id:
+            # Tianna
             case 422531891011387394:
                 await message.add_reaction("🪨")
+            # Story
             case 443231652005543936:
                 await message.add_reaction("🐸")
+            # Emma
             case 760603343679782942:
                 await message.add_reaction("🍞")
+                await message.add_reaction("🍋")
+                await message.add_reaction("🐱")
+            # Jon
             case 422530472053178381:
                 await message.add_reaction("🥤")
             case _:
