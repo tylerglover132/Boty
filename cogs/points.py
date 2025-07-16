@@ -172,10 +172,11 @@ class PointsCog(commands.Cog):
             await asyncio.sleep(30 * 60)
 
             if self.trivia_game:
+                correct_answer = self.trivia_game.get_correct()
                 self.trivia_game = None
                 for channel_id in trivia_channels:
                     channel = self.bot.get_channel(channel_id)
-                    await channel.send("Looks like no one got the answer to the trivia question.\nBetter luck next time!")
+                    await channel.send(f"Looks like no one got the answer to the trivia question.\n The correct answer was {correct_answer}.\nBetter luck next time!")
 
         else:
             self.bot.logger.info('Trivia loop. No trivia this time.')
