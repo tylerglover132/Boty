@@ -181,6 +181,8 @@ class DiscordBot(commands.Bot):
         if message.author == self.user or message.author.bot:
             return
         await self.process_commands(message)
+        if message.author.id == 443231652005543936:
+            await message.add_reaction("🐸")
 
     async def on_command_completion(self, context: Context) -> None:
         """
