@@ -62,9 +62,10 @@ class DB:
             SET points = ?
             WHERE id = ?
             ''', (user_info.points, user_info.dist_id))
+            self.conn.commit()
             return True
         except Exception as e:
-            print("Heck")
+            print(f"Heck: {e}")
             return False
 
     def delete_user(self, dist_id: int) -> bool:
