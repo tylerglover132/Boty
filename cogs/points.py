@@ -6,26 +6,15 @@ from pathlib import Path
 import random as r
 import aiohttp
 import html
-from discord.ui import View, Button
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from db.db import DB
+from db.db import User
 
 TRIVIA_URL = "https://opentdb.com/api.php?amount=1&difficulty=hard&type=multiple"
 
 config = json.loads(Path('config/config.json').read_text())
-
-
-def add_points(user_id: int, points: int) -> int:
-    print(f'Adding points for {user_id}')
-    points_list = json.loads(Path('data/points.json').read_text())
-    if str(user_id) in points_list.keys():
-        points_list[str(user_id)] += points
-        try:
-            with open("data/points.json", "w", encoding="utf-8") as f:
-                json.dump(points_list, f, ensure_ascii=True, indent=4)
-            return points_list[str(user_id)]
-        except Exception as e:
-            return -1
-    else:
-        return -2
 
 class TriviaGame:
 
@@ -65,6 +54,7 @@ class PointsCog(commands.Cog):
         self.bot = bot
         self.trivia_game = None
         self.gamble_cooldown = False
+        self.database = DB()
 
         # Start loops
         self.add_points_for_all.start()
@@ -74,78 +64,42 @@ class PointsCog(commands.Cog):
 
     @commands.command(name="trackpoints")
     async def trackpoints(self, ctx: discord.ext.commands.Context) -> None:
-        points_list = json.loads(Path("data/points.json").read_text())
-        if str(ctx.author.id) in points_list:
-            await ctx.reply("You're already signed up to track points")
+        new_user = User(ctx.author.id, ctx.author.name, 0)
+        if self.database.add_user(new_user):
+            await ctx.reply('You are now tracking points!')
         else:
-            points_list[ctx.author.id] = 0
-            try:
-                with open("data/points.json", "w", encoding="utf-8") as f:
-                    json.dump(points_list, f, ensure_ascii=True, indent=4)
-                await ctx.reply("You points are now being tracked.")
-            except Exception as e:
-                await ctx.reply("Sorry, there was an error. Please try to sign up for points tracking later.")
-                self.bot.logger.error(f"Error occurred while adding point tracking: {e}")
+            await ctx.reply('There was an issue! You may already be tracking. If not, please try again.')
 
     @commands.command(name="gamble")
     async def gamble(self, ctx: discord.ext.commands.Context) -> None:
         if not self.gamble_cooldown:
-            points_list = json.loads(Path("data/points.json").read_text())
-            if str(ctx.author.id) in points_list:
-                double = r.choice([True, False])
-                if double:
-                    points_list[str(ctx.author.id)] = int(points_list[str(ctx.author.id)] * 2)
-                    response = "Congrats! Your points have been doubled! New points value: "
+            curr_user: User = self.database.get_user(ctx.author.id)
+            if r.choice((True, False)):
+                curr_user.points *= 2
+                message = f"Congrats, you've doubled your points! New value: {curr_user.points}"
+                if self.database.update_user(curr_user):
+                    await ctx.reply(message)
                 else:
-                    points_list[str(ctx.author.id)] = int(points_list[str(ctx.author.id)] / 2)
-                    response = "Better luck next time. You lost half your points :( New points value: "
-                try:
-                    with open("data/points.json", "w", encoding="utf-8") as f:
-                        json.dump(points_list, f, ensure_ascii=True, indent=4)
-                    await ctx.reply(response + str(points_list[str(ctx.author.id)]))
-                except Exception as e:
-                    await ctx.reply("Sorry, there was an error. No points changed")
-                    self.bot.logger.error(f"Error occurred while gambling: {e}")
+                    await ctx.reply("Something went wrong! You might not be tracking your points!")
             else:
-                await ctx.reply("You are currently not tracking points. Use command !trackpoints to begin tracking")
-            self.gamble_cooldown = True
-
+                curr_user.points /= 2
+                message = f"You lose! You're points have been cut in half. New value: {curr_user.points}"
+                if self.database.update_user(curr_user):
+                    await ctx.reply(message)
+                else:
+                    await ctx.reply("Something went wrong! You might not be tracking your points!")
         else:
             await ctx.reply("!gamble is on cooldown. Please, play responsibly.")
             self.bot.logger.info("!gamble not completed, on cooldown")
 
     @commands.command(name="points")
     async def points(self, ctx: discord.ext.commands.Context) -> None:
-        points_list = json.loads(Path("data/points.json").read_text())
-        if str(ctx.author.id) in points_list:
-            await ctx.reply(f"You have {points_list[str(ctx.author.id)]}!")
+        curr_user: User = self.database.get_user(ctx.author.id)
+        if curr_user.dist_id == 0:
+            await ctx.reply("You are not tracking points. Use command !trackpoints to begin tracking")
         else:
-            await ctx.reply("You are currently not tracking points. Use command !trackpoints to begin tracking")
+            await ctx.reply(f"You have {curr_user.points}!")
 
-    @commands.command(name="leaderboard")
-    async def leaderboard(self, ctx):
-        points_list = json.loads(Path("data/points.json").read_text())
-        points_list_sorted_keys = dict(sorted(points_list.items(), key=lambda item: item[1], reverse=True)).keys()
-        listing = ''
-        for key in points_list_sorted_keys:
-            points = points_list[key]
-            user = await self.bot.fetch_user(int(key))
-            username = user.display_name
-            listing += username + ":  " + str(points) + '\n'
-        embed = discord.Embed(title="Leaderboard", description = listing, color=0x00ff00)
-        await ctx.send(embed=embed)
-
-    @tasks.loop(minutes=120.0)
-    async def add_points_for_all(self) -> None:
-        points_list = json.loads(Path("data/points.json").read_text())
-        for key in points_list.keys():
-            points_list[key] += 1
-        try:
-            with open("data/points.json", "w", encoding="utf-8") as f:
-                json.dump(points_list, f, ensure_ascii=True, indent=4)
-            self.bot.logger.info("All users given 1 point.")
-        except Exception as e:
-            self.bot.logger.error(f"Error occurred while updating all user points: {e}")
 
     @tasks.loop(minutes=60.0)
     async def trivia(self) -> None:
@@ -186,6 +140,14 @@ class PointsCog(commands.Cog):
         self.gamble_cooldown = False
         self.bot.logger.info("!gamble off of cooldown")
 
+    @tasks.loop(minutes=120.0)
+    async def add_points_for_all(self) -> None:
+        users = self.database.get_users()
+        for user in users:
+            user.points += 1
+            self.database.update_user(user)
+        self.bot.logger.info('1 point added for all users')
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         if message.author.bot:
@@ -199,35 +161,36 @@ class PointsCog(commands.Cog):
                     return
 
                 if message.content == self.trivia_game.get_correct():
-                    result = add_points(user_id, 100)
-                    self.trivia_game = None
-                    if result == -2:
-                        await message.reply("You're right but we can't add your points! Looks like you're not tracking your points. !trackpoints to start stracking.")
-                        return
-                    if result == -1:
-                        await message.reply('Oh no! There was an issue! Trivia time over :(')
-                        self.bot.logger.error('Trivia error occurred. Ending trivia')
-                        return
-                    await message.reply('Correct! 100 points added!')
-
+                    curr_user = self.database.get_user(user_id)
+                    curr_user.points += 100
+                    if self.database.update_user(curr_user):
+                        await message.reply('Correct! 100 points added!')
+                        self.trivia_game = None
+                    else:
+                        await message.reply("You're right but something went wrong! You might not be tracking your points!")
                 else:
                     self.trivia_game.already_answered.append(user_id)
                     await message.reply('Nope! Better luck next time!')
 
     @add_points_for_all.before_loop
-    async def before_add_points_for_all(self) -> None:
-        """
-        Before adding points, we make sure that the bot is running
-        """
-        await self.bot.wait_until_ready()
-
     @trivia.before_loop
-    async def before_trivia(self) -> None:
+    @refresh_gamble_cooldown.before_loop
+    async def before_loops(self) -> None:
         await self.bot.wait_until_ready()
 
-    @refresh_gamble_cooldown.before_loop
-    async def before_refresh_gamble_cooldown(self) -> None:
-        await self.bot.wait_until_ready()
+    @commands.command(name="leaderboard")
+    async def leaderboard(self, ctx):
+        users = self.database.get_users()
+        listing = ''
+        for user in users:
+            points = user.points
+            username = user.name
+            listing += username + ":  " + str(points) + '\n'
+        embed = discord.Embed(title="Leaderboard", description = listing, color=0x00ff00)
+        await ctx.send(embed=embed)
+
+
+
 
 
 
