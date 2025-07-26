@@ -12,6 +12,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from db.db import DB
 from db.db import User
 
+URL = 'https://botly-api-rcyr.shuttle.app'
 TRIVIA_URL = "https://opentdb.com/api.php?amount=1&difficulty=hard&type=multiple"
 
 config = json.loads(Path('config/config.json').read_text())
@@ -55,11 +56,13 @@ class PointsCog(commands.Cog):
         self.trivia_game = None
         self.gamble_cooldown = False
         self.database = DB()
+        self.session = aiohttp.ClientSession()
 
         # Start loops
         self.add_points_for_all.start()
         self.trivia.start()
         self.refresh_gamble_cooldown.start()
+        self.db_update.start()
 
 
     @commands.command(name="trackpoints")
@@ -135,6 +138,23 @@ class PointsCog(commands.Cog):
         else:
             self.bot.logger.info('Trivia loop. No trivia this time.')
 
+    @tasks.loop(minutes=5.0)
+    async def db_update(self) -> None:
+        try:
+            async with self.session.get(
+                    URL + '/db_points'
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    user: User = self.database.get_user(data['id'])
+                    user.points += data['points']
+                    if self.database.update_user(user):
+                        self.bot.logger.info("DB point addition successful")
+                else:
+                    self.bot.logger.info('No db updates needed')
+        except Exception as e:
+            print(f"didn't work: {e}")
+
     @tasks.loop(minutes=30.0)
     async def refresh_gamble_cooldown(self) -> None:
         self.gamble_cooldown = False
@@ -172,6 +192,7 @@ class PointsCog(commands.Cog):
                     self.trivia_game.already_answered.append(user_id)
                     await message.reply('Nope! Better luck next time!')
 
+    @db_update.before_loop
     @add_points_for_all.before_loop
     @trivia.before_loop
     @refresh_gamble_cooldown.before_loop
