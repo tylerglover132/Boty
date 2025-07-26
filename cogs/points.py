@@ -59,7 +59,7 @@ class PointsCog(commands.Cog):
         self.session = aiohttp.ClientSession()
 
         # Start loops
-        self.add_points_for_all.start()
+        self.add_points_roulette.start()
         self.trivia.start()
         self.refresh_gamble_cooldown.start()
         self.db_update.start()
@@ -160,13 +160,13 @@ class PointsCog(commands.Cog):
         self.gamble_cooldown = False
         self.bot.logger.info("!gamble off of cooldown")
 
-    @tasks.loop(minutes=120.0)
+    @tasks.loop(minutes=60.0)
     async def add_points_roulette(self) -> None:
         users = self.database.get_users()
         user = r.choice(users)
         user.points += 50
         self.database.update_user(user)
-        self.bot.logger.info('1 point added for all users')
+        self.bot.logger.info(f'Roulette: 50 points added for {user.name}')
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
