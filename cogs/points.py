@@ -94,6 +94,7 @@ class TriviaGame(discord.ui.View):
                             asyncio.run(post_form())
                             await interaction.response.send_message(f"{interaction.user.name} was the first to get the message right! They will be awarded 100 points!")
                         except Exception as e:
+                            print(f"Error: {e}")
                             await interaction.response.send_message("Something went wrong. Shutting down trivia.")
 
 
