@@ -71,11 +71,11 @@ class TriviaGame(discord.ui.View):
         if self.question:
             if user_id in self.already_answered:
                 print(f'User {interaction.user.name} already answered.')
-                interaction.response.send_message("You already answered!", ephemeral=True)
+                await interaction.response.send_message("You already answered!", ephemeral=True)
                 return
             else:
                 if self.winner:
-                    interaction.response.send_message("Someone already got this question correct.")
+                    await interaction.response.send_message("Someone already got this question correct.", ephemeral=True)
                     return
                 else:
                     self.already_answered.append(user_id)
@@ -91,12 +91,14 @@ class TriviaGame(discord.ui.View):
                                         print(resp.status)
                                         text = await resp.text()
                                         print(text)
-                            asyncio.run(post_form())
+                            await post_form()
                             await interaction.response.send_message(f"{interaction.user.name} was the first to get the message right! They will be awarded 100 points!")
                         except Exception as e:
                             print(f"Error: {e}")
                             await interaction.response.send_message("Something went wrong. Shutting down trivia.")
                             self.question = None
+                    else:
+                        await interaction.response.send_message("Sorry. Wrong answer. You'll get it next time.", ephemeral=True)
 
 
     async def retrieve_question(self) -> None:
