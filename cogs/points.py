@@ -28,28 +28,29 @@ class TriviaGame(discord.ui.View):
         self.done = False
 
     @discord.ui.button(label="A", style=discord.ButtonStyle.primary)
-    async def a(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def a(self, interaction: discord.Interaction, button: discord.ui.Button):
         correct = self.answer_list[0] == self.get_correct()
         await self.process_response(interaction.user.id, correct, interaction)
 
     @discord.ui.button(label="B", style=discord.ButtonStyle.primary)
-    async def b(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def b(self, interaction: discord.Interaction,  button: discord.ui.Button):
         correct = self.answer_list[1] == self.get_correct()
         await self.process_response(interaction.user.id, correct, interaction)
 
     @discord.ui.button(label="C", style=discord.ButtonStyle.primary)
-    async def c(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def c(self, interaction: discord.Interaction, button: discord.ui.Button):
         correct = self.answer_list[2] == self.get_correct()
         await self.process_response(interaction.user.id, correct, interaction)
 
     @discord.ui.button(label="D", style=discord.ButtonStyle.primary)
-    async def d(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def d(self, interaction: discord.Interaction, button: discord.ui.Button):
         correct = self.answer_list[3] == self.get_correct()
         await self.process_response(interaction.user.id, correct, interaction)
 
     async def process_response(self, user_id: int, correct: bool, interaction: discord.Interaction):
         if self.question:
             if user_id in self.already_answered:
+                print(f'User {interaction.user.name} already answered.')
                 return
             else:
                 if self.winner:
@@ -57,6 +58,7 @@ class TriviaGame(discord.ui.View):
                 else:
                     self.already_answered.append(user_id)
                     if correct:
+                        print(f'User {interaction.user.name} got the question correct.')
                         try:
                             async def post_form():
                                 async with aiohttp.ClientSession() as session:
