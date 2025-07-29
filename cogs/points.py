@@ -80,12 +80,13 @@ class TriviaGame(discord.ui.View):
                 else:
                     self.already_answered.append(user_id)
                     if correct:
+                        self.winner = interaction.user.id
                         print(f'User {interaction.user.name} got the question correct.')
                         try:
                             async def post_form():
                                 async with aiohttp.ClientSession() as session:
                                     async with session.post(
-                                        URL + 'db_points',
+                                        URL + '/db_points',
                                         data = {"id": user_id, "points": 100}
                                     ) as resp:
                                         print(resp.status)
@@ -96,7 +97,6 @@ class TriviaGame(discord.ui.View):
                         except Exception as e:
                             print(f"Error: {e}")
                             await interaction.response.send_message("Something went wrong. Shutting down trivia.")
-                            self.question = None
                     else:
                         await interaction.response.send_message("Sorry. Wrong answer. You'll get it next time.", ephemeral=True)
 
