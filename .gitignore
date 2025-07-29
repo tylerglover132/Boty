@@ -2,6 +2,7 @@
 /data/points.json
 /data/prest.json
 discord.log
+/database.db
 /db/database.db
 /db/bin/
 /database.db
