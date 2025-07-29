@@ -17,11 +17,61 @@ TRIVIA_URL = "https://opentdb.com/api.php?amount=1&difficulty=hard&type=multiple
 
 config = json.loads(Path('config/config.json').read_text())
 
-class TriviaGame:
+class TriviaGame(discord.ui.View):
 
     def __init__(self) -> None:
+        super().__init__(timeout=60*29)
         self.question: dict = None
         self.already_answered = []
+        self.answer_list = list()
+        self.winner: int = None
+        self.done = False
+
+    @discord.ui.button(label="A", style=discord.ButtonStyle.primary)
+    async def a(self, button: discord.ui.Button, interaction: discord.Interaction):
+        correct = self.answer_list[0] == self.get_correct()
+        await self.process_response(interaction.user.id, correct, interaction)
+
+    @discord.ui.button(label="B", style=discord.ButtonStyle.primary)
+    async def b(self, button: discord.ui.Button, interaction: discord.Interaction):
+        correct = self.answer_list[1] == self.get_correct()
+        await self.process_response(interaction.user.id, correct, interaction)
+
+    @discord.ui.button(label="C", style=discord.ButtonStyle.primary)
+    async def c(self, button: discord.ui.Button, interaction: discord.Interaction):
+        correct = self.answer_list[2] == self.get_correct()
+        await self.process_response(interaction.user.id, correct, interaction)
+
+    @discord.ui.button(label="D", style=discord.ButtonStyle.primary)
+    async def d(self, button: discord.ui.Button, interaction: discord.Interaction):
+        correct = self.answer_list[3] == self.get_correct()
+        await self.process_response(interaction.user.id, correct, interaction)
+
+    async def process_response(self, user_id: int, correct: bool, interaction: discord.Interaction):
+        if self.question:
+            if user_id in self.already_answered:
+                return
+            else:
+                if self.winner:
+                    return
+                else:
+                    self.already_answered.append(user_id)
+                    if correct:
+                        try:
+                            async def post_form():
+                                async with aiohttp.ClientSession() as session:
+                                    async with session.post(
+                                        URL + 'db_points',
+                                        data = {"id": user_id, "points": 100}
+                                    ) as resp:
+                                        print(resp.status)
+                                        text = await resp.text()
+                                        print(text)
+                            asyncio.run(post_form())
+                            await interaction.response.send_message(f"{interaction.user.name} was the first to get the message right! They will be awarded 100 points!")
+                        except Exception as e:
+                            await interaction.response.send_message("Something went wrong. Shutting down trivia.")
+
 
     async def retrieve_question(self) -> None:
         async with aiohttp.ClientSession() as session:
@@ -32,9 +82,6 @@ class TriviaGame:
                 self.question['correct_answer'] = html.unescape(self.question['correct_answer'])
                 self.question['incorrect_answers'] = html.unescape(self.question['incorrect_answers'])
 
-    def end_game(self) -> None:
-        self.question = None
-
     def get_question(self) -> str:
         return self.question['question']
 
@@ -43,6 +90,7 @@ class TriviaGame:
         for option in self.question['incorrect_answers']:
             options.append(option)
         r.shuffle(options)
+        self.answer_list = options
         return options
 
     def get_correct(self) -> str:
@@ -117,18 +165,18 @@ class PointsCog(commands.Cog):
                 title="🎉 Trivia Time!",
                 description=f"💡 The first person to respond with the right answer will win points!\n\n"
                             f"❓ *{self.trivia_game.get_question()}*\n\n"
-                            f"{options_text}"
+                            f"{options_text}",
             )
             embed.set_footer(text="Reply with the correct answer exactly as shown. You have 30 minutes!")
 
             trivia_channels = config['trivia_channel_id']
             for channel_id in trivia_channels:
                 channel = self.bot.get_channel(channel_id)
-                await channel.send(embed=embed)
+                await channel.send(embed=embed, view=self.trivia_game)
 
             await asyncio.sleep(30 * 60)
 
-            if self.trivia_game:
+            if not self.trivia_game.winner:
                 correct_answer = self.trivia_game.get_correct()
                 self.trivia_game = None
                 for channel_id in trivia_channels:
@@ -168,29 +216,6 @@ class PointsCog(commands.Cog):
         self.database.update_user(user)
         self.bot.logger.info(f'Roulette: 50 points added for {user.name}')
 
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message) -> None:
-        if message.author.bot:
-            return
-
-        if self.trivia_game:
-            if message.channel.id in config['trivia_channel_id']:
-                user_id = message.author.id
-                if user_id in self.trivia_game.already_answered:
-                    await message.reply("You already answered! Don't be greedy!")
-                    return
-
-                if message.content == self.trivia_game.get_correct():
-                    curr_user = self.database.get_user(user_id)
-                    curr_user.points += 100
-                    if self.database.update_user(curr_user):
-                        await message.reply('Correct! 100 points added!')
-                        self.trivia_game = None
-                    else:
-                        await message.reply("You're right but something went wrong! You might not be tracking your points!")
-                else:
-                    self.trivia_game.already_answered.append(user_id)
-                    await message.reply('Nope! Better luck next time!')
 
     @db_update.before_loop
     @add_points_roulette.before_loop
