@@ -96,6 +96,7 @@ class TriviaGame(discord.ui.View):
                         except Exception as e:
                             print(f"Error: {e}")
                             await interaction.response.send_message("Something went wrong. Shutting down trivia.")
+                            self.question = None
 
 
     async def retrieve_question(self) -> None:
