@@ -159,8 +159,11 @@ class PointsCog(commands.Cog):
             self.trivia_game = TriviaGame()
             await self.trivia_game.retrieve_question()
             options_text = ''
-            for option in self.trivia_game.return_options():
-                options_text += (option + '\n')
+            options = self.trivia_game.return_options()
+            options_text += ('A: ' + options[0] + '\n')
+            options_text += ('B: ' + options[1] + '\n')
+            options_text += ('C: ' + options[2] + '\n')
+            options_text += ('D: ' + options[3] + '\n')
             embed = discord.Embed(
                 title="🎉 Trivia Time!",
                 description=f"💡 The first person to respond with the right answer will win points!\n\n"
