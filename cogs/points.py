@@ -98,13 +98,13 @@ class TriviaGame(discord.ui.View):
                                         print(text)
                             await post_form()
                             await interaction.followup.send(f"{interaction.user.name} was the first to get the message right! They will be awarded 100 points!")
+                            await self.end_game()
                         except Exception as e:
                             print(f"Error: {e}")
                             await interaction.followup.send("Something went wrong. Shutting down trivia.")
                             await self.end_game()
                     else:
                         await interaction.followup.send("Sorry. Wrong answer. You'll get it next time.", ephemeral=True)
-                        await self.end_game()
 
 
 
