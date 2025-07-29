@@ -35,6 +35,7 @@ class TriviaGame(discord.ui.View):
             button.style = discord.ButtonStyle.green
         else:
             button.style = discord.ButtonStyle.red
+        await interaction.response.edit_message(view=self)
         await self.process_response(interaction.user.id, correct, interaction)
 
     @discord.ui.button(label="B", style=discord.ButtonStyle.primary)
@@ -45,6 +46,7 @@ class TriviaGame(discord.ui.View):
             button.style = discord.ButtonStyle.green
         else:
             button.style = discord.ButtonStyle.red
+        await interaction.response.edit_message(view=self)
         await self.process_response(interaction.user.id, correct, interaction)
 
     @discord.ui.button(label="C", style=discord.ButtonStyle.primary)
@@ -55,6 +57,7 @@ class TriviaGame(discord.ui.View):
             button.style = discord.ButtonStyle.green
         else:
             button.style = discord.ButtonStyle.red
+        await interaction.response.edit_message(view=self)
         await self.process_response(interaction.user.id, correct, interaction)
 
     @discord.ui.button(label="D", style=discord.ButtonStyle.primary)
@@ -65,17 +68,18 @@ class TriviaGame(discord.ui.View):
             button.style = discord.ButtonStyle.green
         else:
             button.style = discord.ButtonStyle.red
+        await interaction.response.edit_message(view=self)
         await self.process_response(interaction.user.id, correct, interaction)
 
     async def process_response(self, user_id: int, correct: bool, interaction: discord.Interaction):
         if self.question:
             if user_id in self.already_answered:
                 print(f'User {interaction.user.name} already answered.')
-                await interaction.response.send_message("You already answered!", ephemeral=True)
+                await interaction.followup.send("You already answered!", ephemeral=True)
                 return
             else:
                 if self.winner:
-                    await interaction.response.send_message("Someone already got this question correct.", ephemeral=True)
+                    await interaction.followup.send("Someone already got this question correct.", ephemeral=True)
                     return
                 else:
                     self.already_answered.append(user_id)
@@ -93,12 +97,12 @@ class TriviaGame(discord.ui.View):
                                         text = await resp.text()
                                         print(text)
                             await post_form()
-                            await interaction.response.send_message(f"{interaction.user.name} was the first to get the message right! They will be awarded 100 points!")
+                            await interaction.followup.send(f"{interaction.user.name} was the first to get the message right! They will be awarded 100 points!")
                         except Exception as e:
                             print(f"Error: {e}")
-                            await interaction.response.send_message("Something went wrong. Shutting down trivia.")
+                            await interaction.followup.send("Something went wrong. Shutting down trivia.")
                     else:
-                        await interaction.response.send_message("Sorry. Wrong answer. You'll get it next time.", ephemeral=True)
+                        await interaction.followup.send("Sorry. Wrong answer. You'll get it next time.", ephemeral=True)
 
 
     async def retrieve_question(self) -> None:
