@@ -101,8 +101,11 @@ class TriviaGame(discord.ui.View):
                         except Exception as e:
                             print(f"Error: {e}")
                             await interaction.followup.send("Something went wrong. Shutting down trivia.")
+                            await self.end_game()
                     else:
                         await interaction.followup.send("Sorry. Wrong answer. You'll get it next time.", ephemeral=True)
+                        await self.end_game()
+
 
 
     async def retrieve_question(self) -> None:
@@ -127,6 +130,11 @@ class TriviaGame(discord.ui.View):
 
     def get_correct(self) -> str:
         return self.question['correct_answer']
+
+    async def end_game(self):
+        for item in self.children:
+            item.disabled = True
+        await self.message.edit(view=self)
 
 class PointsCog(commands.Cog):
     """Cog that manages user points"""
