@@ -30,60 +30,39 @@ class TriviaGame(discord.ui.View):
     @discord.ui.button(label="A", style=discord.ButtonStyle.primary)
     async def a(self, interaction: discord.Interaction, button: discord.ui.Button):
         correct = self.answer_list[0] == self.get_correct()
-        button.disabled = True
-        if correct:
-            button.style = discord.ButtonStyle.green
-        else:
-            button.style = discord.ButtonStyle.red
-        await interaction.response.edit_message(view=self)
-        await self.process_response(interaction.user.id, correct, interaction)
+        await self.process_response(interaction.user.id, correct, interaction, button)
 
     @discord.ui.button(label="B", style=discord.ButtonStyle.primary)
     async def b(self, interaction: discord.Interaction,  button: discord.ui.Button):
         correct = self.answer_list[1] == self.get_correct()
-        button.disabled = True
-        if correct:
-            button.style = discord.ButtonStyle.green
-        else:
-            button.style = discord.ButtonStyle.red
-        await interaction.response.edit_message(view=self)
-        await self.process_response(interaction.user.id, correct, interaction)
+        await self.process_response(interaction.user.id, correct, interaction, button)
 
     @discord.ui.button(label="C", style=discord.ButtonStyle.primary)
     async def c(self, interaction: discord.Interaction, button: discord.ui.Button):
-        button.disabled = True
         correct = self.answer_list[2] == self.get_correct()
-        if correct:
-            button.style = discord.ButtonStyle.green
-        else:
-            button.style = discord.ButtonStyle.red
-        await interaction.response.edit_message(view=self)
-        await self.process_response(interaction.user.id, correct, interaction)
+        await self.process_response(interaction.user.id, correct, interaction, button)
 
     @discord.ui.button(label="D", style=discord.ButtonStyle.primary)
     async def d(self, interaction: discord.Interaction, button: discord.ui.Button):
-        button.disabled = True
         correct = self.answer_list[3] == self.get_correct()
-        if correct:
-            button.style = discord.ButtonStyle.green
-        else:
-            button.style = discord.ButtonStyle.red
-        await interaction.response.edit_message(view=self)
-        await self.process_response(interaction.user.id, correct, interaction)
+        await self.process_response(interaction.user.id, correct, interaction, button)
 
-    async def process_response(self, user_id: int, correct: bool, interaction: discord.Interaction):
+    async def process_response(self, user_id: int, correct: bool, interaction: discord.Interaction, button: discord.ui.Button):
         if self.question:
             if user_id in self.already_answered:
                 print(f'User {interaction.user.name} already answered.')
-                await interaction.followup.send("You already answered!", ephemeral=True)
+                await interaction.response.send_message("You already answered!", ephemeral=True)
                 return
             else:
                 if self.winner:
-                    await interaction.followup.send("Someone already got this question correct.", ephemeral=True)
+                    await interaction.response.send_message("Someone already got this question correct.", ephemeral=True)
                     return
                 else:
+                    button.disabled = True
                     self.already_answered.append(user_id)
                     if correct:
+                        button.style = discord.ButtonStyle.green
+                        await interaction.response.edit_message(view=self)
                         self.winner = interaction.user.id
                         print(f'User {interaction.user.name} got the question correct.')
                         try:
@@ -102,6 +81,8 @@ class TriviaGame(discord.ui.View):
                             print(f"Error: {e}")
                             await interaction.followup.send("Something went wrong. Shutting down trivia.")
                     else:
+                        button.style = discord.ButtonStyle.red
+                        await interaction.response.edit_message(view=self)
                         await interaction.followup.send("Sorry. Wrong answer. You'll get it next time.", ephemeral=True)
 
 
