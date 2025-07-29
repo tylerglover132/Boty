@@ -87,7 +87,7 @@ class TriviaGame(discord.ui.View):
                                 async with aiohttp.ClientSession() as session:
                                     async with session.post(
                                         URL + '/db_points',
-                                        data = {"id": user_id, "points": 100}
+                                        json = {"id": user_id, "points": 100}
                                     ) as resp:
                                         print(resp.status)
                                         text = await resp.text()
