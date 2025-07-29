@@ -139,7 +139,7 @@ class TriviaGame(discord.ui.View):
         for item in self.children:
             if hasattr(item, "disabled"):
                 item.disabled = True
-        await self.message.edit_message(view=self)
+        await self.message.edit(view=self)
 
 class TriviaCog(commands.Cog):
     def __init__(self, bot: discord.ext.commands.Bot) -> None:
