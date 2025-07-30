@@ -158,6 +158,8 @@ class TriviaCog(commands.Cog):
             await asyncio.sleep(30 * 60)
             await self.trivia_game.end()
             self.trivia_game = None
+        else:
+            self.bot.logger.info("No trivia this time")
 
     @trivia.before_loop
     async def before_loops(self) -> None:
