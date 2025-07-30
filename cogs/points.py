@@ -53,7 +53,7 @@ class PointsCog(commands.Cog):
                     await ctx.reply("Something went wrong! You might not be tracking your points!")
             else:
                 curr_user.points /= 2
-                message = f"You lose! You're points have been cut in half. New value: {curr_user.points}"
+                message = f"You lose! You're points have been cut in half. New value: {int(curr_user.points)}"
                 if self.database.update_user(curr_user):
                     await ctx.reply(message)
                 else:
