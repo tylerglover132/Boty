@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 URL = 'https://botly-api-rcyr.shuttle.app'
-TRIVIA_URL = "https://opentdb.com/api.php?amount=1&difficulty=hard&type=multiple"
+TRIVIA_URL = "https://opentdb.com/api.php?amount=1"
 
 config = json.loads(Path('config/config.json').read_text())
 
