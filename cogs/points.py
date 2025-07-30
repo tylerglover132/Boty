@@ -1,15 +1,12 @@
-import asyncio
 import json
 import discord
 from discord.ext import commands, tasks
 from pathlib import Path
 import random as r
 import aiohttp
-import html
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from db.db import DB
 from db.db import User
 
 URL = 'https://botly-api-rcyr.shuttle.app'
@@ -23,7 +20,6 @@ class PointsCog(commands.Cog):
     def __init__(self, bot: discord.ext.commands.Bot)-> None:
         self.bot = bot
         self.gamble_cooldown = False
-        self.database = DB()
         self.session = aiohttp.ClientSession()
 
         # Start loops
@@ -35,7 +31,7 @@ class PointsCog(commands.Cog):
     @commands.command(name="trackpoints")
     async def trackpoints(self, ctx: discord.ext.commands.Context) -> None:
         new_user = User(ctx.author.id, ctx.author.name, 0)
-        if self.database.add_user(new_user):
+        if self.bot.database.add_user(new_user):
             await ctx.reply('You are now tracking points!')
         else:
             await ctx.reply('There was an issue! You may already be tracking. If not, please try again.')
@@ -43,18 +39,18 @@ class PointsCog(commands.Cog):
     @commands.command(name="gamble")
     async def gamble(self, ctx: discord.ext.commands.Context) -> None:
         if not self.gamble_cooldown:
-            curr_user: User = self.database.get_user(ctx.author.id)
+            curr_user: User = self.bot.database.get_user(ctx.author.id)
             if r.choice((True, False)):
                 curr_user.points *= 2
                 message = f"Congrats, you've doubled your points! New value: {curr_user.points}"
-                if self.database.update_user(curr_user):
+                if self.bot.database.update_user(curr_user):
                     await ctx.reply(message)
                 else:
                     await ctx.reply("Something went wrong! You might not be tracking your points!")
             else:
                 curr_user.points /= 2
                 message = f"You lose! You're points have been cut in half. New value: {int(curr_user.points)}"
-                if self.database.update_user(curr_user):
+                if self.bot.database.update_user(curr_user):
                     await ctx.reply(message)
                 else:
                     await ctx.reply("Something went wrong! You might not be tracking your points!")
@@ -64,13 +60,13 @@ class PointsCog(commands.Cog):
 
     @commands.command(name="points")
     async def points(self, ctx: discord.ext.commands.Context) -> None:
-        curr_user: User = self.database.get_user(ctx.author.id)
+        curr_user: User = self.bot.database.get_user(ctx.author.id)
         if curr_user.dist_id == 0:
             await ctx.reply("You are not tracking points. Use command !trackpoints to begin tracking")
         else:
             await ctx.reply(f"You have {curr_user.points}!")
 
-    @tasks.loop(minutes=5.0)
+    @tasks.loop(minutes=20.0)
     async def db_update(self) -> None:
         try:
             async with self.session.get(
@@ -80,7 +76,7 @@ class PointsCog(commands.Cog):
                     data = await response.json()
                     user: User = self.database.get_user(data['id'])
                     user.points += data['points']
-                    if self.database.update_user(user):
+                    if self.bot.database.update_user(user):
                         self.bot.logger.info("DB point addition successful")
                 else:
                     self.bot.logger.info('No db updates needed')
@@ -94,10 +90,10 @@ class PointsCog(commands.Cog):
 
     @tasks.loop(minutes=60.0)
     async def add_points_roulette(self) -> None:
-        users = self.database.get_users()
+        users = self.bot.database.get_users()
         user = r.choice(users)
         user.points += 50
-        self.database.update_user(user)
+        self.bot.database.update_user(user)
         self.bot.logger.info(f'Roulette: 50 points added for {user.name}')
 
 
@@ -109,7 +105,7 @@ class PointsCog(commands.Cog):
 
     @commands.command(name="leaderboard")
     async def leaderboard(self, ctx):
-        users = self.database.get_users()
+        users = self.bot.database.get_users()
         listing = ''
         for user in users:
             points = user.points

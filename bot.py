@@ -1,4 +1,3 @@
-import os
 import discord
 from discord.ext import commands, tasks
 from discord.ext.commands import Context
@@ -7,6 +6,12 @@ import logging
 import platform
 import json
 from pathlib import Path
+
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from db.db import DB
+from db.db import User
 
 load_dotenv() # Load .env file
 TOKEN = os.getenv("TOKEN")
@@ -118,23 +123,10 @@ class DiscordBot(commands.Bot):
         """
 
         self.logger = logger
-        self.database = None
+        self.database = DB()
         self.bot_prefix = config["command_prefix"]
         self.invite_link = os.getenv("INVITE_LINK")
 
-    # Can be used to implement a database for the bot
-    """
-    async def init_db(self) -> None:
-        async with aiosqlite.connect(
-            f"{os.path.realpath(os.path.dirname(__file__))}/database/database.db"
-        ) as db:
-            with open(
-                f"{os.path.realpath(os.path.dirname(__file__))}/database/schema.sql",
-                encoding = "utf-8"
-            ) as file:
-                await db.executescript(file.read())
-            await db.commit()
-    """
 
     async def load_cogs(self) -> None:
         """

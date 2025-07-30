@@ -7,6 +7,10 @@ import html
 import json
 from pathlib import Path
 
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from db.db import User
 
 URL = 'https://botly-api-rcyr.shuttle.app'
 TRIVIA_URL = "https://opentdb.com/api.php?amount=1"
@@ -61,16 +65,9 @@ class TriviaGame(discord.ui.View):
                     self.winner = interaction.user.id
                     self.bot.logger.info(f'User {interaction.user.id} got the question correct.')
                     try:
-                        async def post_form():
-                            async with aiohttp.ClientSession() as session:
-                                async with session.post(
-                                    URL + '/db_points',
-                                    json = {"id": user_id, "points": 100}
-                                ) as resp:
-                                    self.bot.logger.info(f'DB API response {resp.status}')
-                                    text = await resp.text()
-                                    self.bot.logger.info(text)
-                        await post_form()
+                        curr_user: User = self.bot.database.get_user(user_id)
+                        curr_user.points += 100
+                        self.bot.database.update_user(curr_user)
                         await interaction.followup.send(f"{interaction.user.name} was the first to get the message right! They will be awarded 100 points!")
                         await self.disable_buttons()
                     except Exception as e:
