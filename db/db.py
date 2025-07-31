@@ -23,6 +23,14 @@ class DB:
         ''')
         self.conn.commit()
 
+        # Check if the 'trivia' column exists
+        self.cursor.execute("PRAGMA table_info(users)")
+        columns = [column[1] for column in self.cursor.fetchall()]
+        if 'trivia' not in columns:
+            # Add the trivia column
+            self.cursor.execute("ALTER TABLE users ADD COLUMN trivia INT DEFAULT 0")
+            self.conn.commit()
+
     def add_user(self, new_user: User) -> bool:
         try:
             self.cursor.execute("INSERT INTO users (id, name, points) VALUES (?,?,?)", (new_user.dist_id, new_user.name,new_user.points))
@@ -75,6 +83,24 @@ class DB:
             return True
         except Exception as e:
             print("#@$(&")
+            return False
+
+    def get_top_trivia(self) -> User:
+        try:
+            self.cursor.execute("SELECT * FROM users ORDER BY trivia DESC")
+            user = self.cursor.fetchone()
+            top_trivia_user = User(int(user[0]), str(user[1]), int(user[2]))
+            return top_trivia_user
+        except Exception as e:
+            print("darn")
+            return None
+
+    def add_trivia(self, dist_id: int) -> bool:
+        try:
+            self.cursor.execute("UPDATE users SET trivia = trivia + 1 WHERE id = ?", (dist_id,))
+            return True
+        except Exception as e:
+            print("weiner")
             return False
 
 if __name__=='__main__':

@@ -164,6 +164,34 @@ class TriviaCog(commands.Cog):
         else:
             self.bot.logger.info("No trivia this time")
 
+    @tasks.loop(minutes=120.0)
+    async def update_trivia_leader(self) -> None:
+        top_user: User = self.bot.database.get_top_trivia
+        guild = self.bot.get_guild(11911156230198436741191115623019843674)
+        if not guild:
+            self.bot.logger.error("Guild not found when assigning roles")
+            return
+
+        member = await guild.fetch_member(top_user.dist_id)
+
+        role = guild.get_role(1400575823676838069)
+
+        if not role:
+            self.bot.logger.error("Role not found")
+            return
+
+        for member in guild.members:
+            if role in member.roles:
+                try:
+                    await member.remove_roles(role)
+                except discord.Forbidden:
+                    self.bot.logger.error(f"Can't remove {role.name} from {member}")
+
+        await member.add_roles(role)
+
+        self.bot.logger.info(f"Added role {role.name} to {member.display_name}")
+
+    @update_trivia_leader.before_loop
     @trivia.before_loop
     async def before_loops(self) -> None:
         await self.bot.wait_until_ready()
