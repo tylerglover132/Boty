@@ -56,6 +56,7 @@ intents.presences = True
 
 intents = discord.Intents.default()
 intents.message_content = True
+intents.members = True
 
 # Setup both of the loggers
 class LoggingFormatter(logging.Formatter):

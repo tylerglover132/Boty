@@ -162,11 +162,10 @@ class TriviaGame(discord.ui.View):
             return
 
         for member in guild.members:
-            if role in member.roles:
-                try:
-                    await member.remove_roles(role)
-                except discord.Forbidden:
-                    self.bot.logger.error(f"Can't remove {role.name} from {member}")
+            try:
+                await member.remove_roles(role)
+            except discord.Forbidden:
+                self.bot.logger.error(f"Can't remove {role.name} from {member}")
 
         await top_member.add_roles(role)
 
