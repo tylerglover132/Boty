@@ -160,6 +160,12 @@ class TriviaCog(commands.Cog):
             if not await self.trivia_game.start():
                 return
             await asyncio.sleep(30 * 60)
+            trivia_winner = self.trivia_game.winner
+            if trivia_winner:
+                if self.bot.database.add_trivia(trivia_winner):
+                    self.bot.logger(f"Trivia right count incremented for user {trivia_winner}")
+                else:
+                    self.bot.error(f"Error adding to trivia count for {trivia_winner}")
             await self.trivia_game.end()
             self.trivia_game = None
         else:
@@ -174,7 +180,7 @@ class TriviaCog(commands.Cog):
             self.bot.logger.error("Guild not found when assigning roles")
             return
 
-        member = await guild.fetch_member(top_user.dist_id)
+        top_member = await guild.fetch_member(top_user.dist_id)
 
         role = guild.get_role(1400575823676838069)
 
@@ -189,9 +195,9 @@ class TriviaCog(commands.Cog):
                 except discord.Forbidden:
                     self.bot.logger.error(f"Can't remove {role.name} from {member}")
 
-        await member.add_roles(role)
+        await top_member.add_roles(role)
 
-        self.bot.logger.info(f"Added role {role.name} to {member.display_name}")
+        self.bot.logger.info(f"Added role {role.name} to {top_member.display_name}")
 
     @update_trivia_leader.before_loop
     @trivia.before_loop
