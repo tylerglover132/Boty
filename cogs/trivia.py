@@ -68,7 +68,7 @@ class TriviaGame(discord.ui.View):
                         curr_user: User = self.bot.database.get_user(user_id)
                         curr_user.points += 100
                         self.bot.database.update_user(curr_user)
-                        await interaction.followup.send(f"{interaction.user.name} was the first to get the message right! They will be awarded 100 points!")
+                        await interaction.followup.send(f"{interaction.user.nick} was the first to get the message right! They will be awarded 100 points!")
                         await self.disable_buttons()
                     except Exception as e:
                         self.bot.logger.error(f"Error: {e}")
