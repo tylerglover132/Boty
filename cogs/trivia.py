@@ -81,20 +81,25 @@ class TriviaGame(discord.ui.View):
                     await interaction.followup.send("Sorry. Wrong answer. You'll get it next time.", ephemeral=True)
 
 
-    async def start(self) -> None:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(TRIVIA_URL) as response:
-                response = await response.json()
-                self.question = response['results'][0]
-                self.question['question'] = html.unescape(self.question['question'])
-                self.question['correct_answer'] = html.unescape(self.question['correct_answer'])
-                self.question['incorrect_answers'] = html.unescape(self.question['incorrect_answers'])
-        options = [self.question['correct_answer']]
+    async def start(self) -> bool:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(TRIVIA_URL) as response:
+                    response = await response.json()
+                    self.question = response['results'][0]
+                    self.question['question'] = html.unescape(self.question['question'])
+                    self.question['correct_answer'] = html.unescape(self.question['correct_answer'])
+                    self.question['incorrect_answers'] = html.unescape(self.question['incorrect_answers'])
+            options = [self.question['correct_answer']]
+        except Exception as e:
+            self.bot.logger.error(f'Failed to get trivia question: {e}')
+            return False
         for option in self.question['incorrect_answers']:
             options.append(option)
         r.shuffle(options)
         self.answer_list = options
         await self.create_send_message()
+        return True
 
     async def end(self) -> None:
         if not self.winner:
@@ -151,7 +156,8 @@ class TriviaCog(commands.Cog):
         if r.randint(1, 100) < 80:
             self.bot.logger.info("Starting trivia")
             self.trivia_game = TriviaGame(self.bot)
-            await self.trivia_game.start()
+            if not await self.trivia_game.start():
+                return
             await asyncio.sleep(30 * 60)
             await self.trivia_game.end()
             self.trivia_game = None
