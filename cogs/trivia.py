@@ -168,6 +168,7 @@ class TriviaCog(commands.Cog):
     @tasks.loop(minutes=120.0)
     async def update_trivia_leader(self) -> None:
         top_user: User = self.bot.database.get_top_trivia()
+        self.bot.logger.info(f"Trivia leader is {top_user.name}")
         guild = self.bot.get_guild(1191115623019843674)
         if not guild:
             self.bot.logger.error("Guild not found when assigning roles")
