@@ -13,7 +13,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from db.db import User
 
 URL = 'https://botly-api-rcyr.shuttle.app'
-TRIVIA_URL = "https://opentdb.com/api.php?amount=1"
+TRIVIA_URL = "https://opentdb.com/api.php?amount=1&type=multiple"
 
 config = json.loads(Path('config/config.json').read_text())
 
