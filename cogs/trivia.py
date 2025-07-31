@@ -150,6 +150,7 @@ class TriviaCog(commands.Cog):
 
         # Start loops
         self.trivia.start()
+        self.update_trivia_leader.start()
 
     @tasks.loop(minutes=60.0)
     async def trivia(self) -> None:
