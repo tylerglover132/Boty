@@ -69,6 +69,7 @@ class TriviaGame(discord.ui.View):
                         curr_user.points += 100
                         self.bot.database.update_user(curr_user)
                         await interaction.followup.send(f"{interaction.user.display_name} was the first to get the message right! They will be awarded 100 points!")
+                        await self.update_trivia_leader()
                         await self.disable_buttons()
                     except Exception as e:
                         self.bot.logger.error(f"Error: {e}")
@@ -143,35 +144,6 @@ class TriviaGame(discord.ui.View):
                 item.disabled = True
         await self.message.edit(view=self)
 
-class TriviaCog(commands.Cog):
-    def __init__(self, bot: discord.ext.commands.Bot) -> None:
-        self.bot = bot
-        self.trivia_game = None
-
-        # Start loops
-        self.trivia.start()
-        self.update_trivia_leader.start()
-
-    @tasks.loop(minutes=60.0)
-    async def trivia(self) -> None:
-        if r.randint(1, 100) < 80:
-            self.bot.logger.info("Starting trivia")
-            self.trivia_game = TriviaGame(self.bot)
-            if not await self.trivia_game.start():
-                return
-            await asyncio.sleep(30 * 60)
-            trivia_winner = self.trivia_game.winner
-            if trivia_winner:
-                if self.bot.database.add_trivia(trivia_winner):
-                    self.bot.logger(f"Trivia right count incremented for user {trivia_winner}")
-                else:
-                    self.bot.error(f"Error adding to trivia count for {trivia_winner}")
-            await self.trivia_game.end()
-            self.trivia_game = None
-        else:
-            self.bot.logger.info("No trivia this time")
-
-    @tasks.loop(minutes=120.0)
     async def update_trivia_leader(self) -> None:
         top_user: User = self.bot.database.get_top_trivia()
         self.bot.logger.info(f"Trivia leader is {top_user.name}")
@@ -199,7 +171,29 @@ class TriviaCog(commands.Cog):
 
         self.bot.logger.info(f"Added role {role.name} to {top_member.display_name}")
 
-    @update_trivia_leader.before_loop
+class TriviaCog(commands.Cog):
+    def __init__(self, bot: discord.ext.commands.Bot) -> None:
+        self.bot = bot
+        self.trivia_game = None
+
+        # Start loops
+        self.trivia.start()
+        self.update_trivia_leader.start()
+
+    @tasks.loop(minutes=60.0)
+    async def trivia(self) -> None:
+        if r.randint(1, 100) < 80:
+            self.bot.logger.info("Starting trivia")
+            self.trivia_game = TriviaGame(self.bot)
+            if not await self.trivia_game.start():
+                return
+            await asyncio.sleep(30 * 60)
+            await self.trivia_game.end()
+            self.trivia_game = None
+        else:
+            self.bot.logger.info("No trivia this time")
+
+
     @trivia.before_loop
     async def before_loops(self) -> None:
         await self.bot.wait_until_ready()
