@@ -205,7 +205,7 @@ class TriviaCog(commands.Cog):
             points = score.points
             name = score.name
             listing += name + ":  " + str(points) + '\n'
-        embed = discord.Emben(title="Trivia Rankings", description=listing, color=0x00ff00)
+        embed = discord.Embed(title="Trivia Rankings", description=listing, color=0x00ff00)
         await ctx.send(embed=embed)
 
 async def setup(bot: discord.ext.commands.Bot) -> None:
