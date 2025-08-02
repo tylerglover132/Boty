@@ -1,5 +1,5 @@
 import sqlite3
-from .User import User
+from .User import User, TriviaScore
 
 
 class DB:
@@ -94,6 +94,19 @@ class DB:
         except Exception as e:
             print("darn")
             return None
+
+    def get_all_trivia(self) -> list:
+        try:
+            self.cursor.execute("SELECT name, trivia FROM users ORDER BY trivia DESC")
+            users_trivia = self.cursor.fetchall()
+            trivia_list = []
+            for user_trivia in users_trivia:
+                new_item = TriviaScore(user_trivia[0], int(user_trivia[1]))
+                trivia_list.append(new_item)
+            return trivia_list
+        except Exception as e:
+            print('database issues')
+            return []
 
     def add_trivia(self, dist_id: int) -> bool:
         try:

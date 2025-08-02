@@ -197,5 +197,16 @@ class TriviaCog(commands.Cog):
     async def before_loops(self) -> None:
         await self.bot.wait_until_ready()
 
+    @commands.command(name="trivia_ranks")
+    async def trivia_ranks(self, ctx):
+        trivia_scores = self.bot.database.get_all_trivia()
+        listing = ''
+        for score in trivia_scores:
+            points = score.points
+            name = score.name
+            listing += name + ":  " + str(points) + '\n'
+        embed = discord.Emben(title="Trivia Rankings", description=listing, color=0x00ff00)
+        await ctx.send(embed=embed)
+
 async def setup(bot: discord.ext.commands.Bot) -> None:
     await bot.add_cog(TriviaCog(bot))

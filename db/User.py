@@ -3,3 +3,8 @@ class User:
         self.dist_id = dist_id
         self.name = name
         self.points = points
+
+class TriviaScore:
+    def __init__(self, name: str, points: int):
+        self.name = name
+        self.points = points
