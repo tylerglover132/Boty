@@ -40,6 +40,7 @@ class PointsCog(commands.Cog):
     async def gamble(self, ctx: discord.ext.commands.Context) -> None:
         if not self.gamble_cooldown:
             curr_user: User = self.bot.database.get_user(ctx.author.id)
+            self.gamble_cooldown = True
             if r.choice((True, False)):
                 curr_user.points *= 2
                 message = f"Congrats, you've doubled your points! New value: {curr_user.points}"
